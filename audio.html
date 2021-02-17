@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>phaser3 memory leak test</title>
+  </head>
+  <body>
+    <noscript style=color:red>請啟動 javascript</noscript>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.50.0/phaser.min.js"></script>
+    
+    <script>
+    window.onload = function () {
+        const url = 'https://examples.phaser.io/assets/audio/bodenstaendig_2000_in_rock_4bit.mp3'
+        let game;
+        class Image extends Phaser.GameObjects.Image {
+
+            constructor (scene, x, y, texture) {
+                super(scene, x, y);
+
+                this.setTexture(texture);
+                this.setPosition(x, y);
+            }
+        }
+
+        class Scene1 extends Phaser.Scene {
+            constructor() {
+                super("scene1");
+            }
+
+            preload() {
+                for (let i = 1; i<= 10; i++) {
+                    this.load.audio(url + i, url)
+                }
+            }
+
+            create() {
+                this.add.text(100, 100, 'Scene 1', { color: '#00ff00', align: 'left' });
+
+                setTimeout(() => {
+
+                    for (let i = 1; i<= 10; i++) {
+                        this.cache.audio.remove(url + i, url)
+                    }
+
+                    this.scene.start('scene2');
+                }, 1000)
+            }
+        }
+        class Scene2 extends Phaser.Scene {
+            constructor() {
+                super("scene2");
+            }
+
+            preload() {
+            }
+
+            create() {
+                this.add.text(100, 100, 'Scene 2', { color: '#00ff00', align: 'left' });
+            }
+        }
+
+        var gameConfig = {
+            type: Phaser.CANVAS,
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+                width: 800,
+                height: 600,
+                zoom: 1
+            },
+            parent: 'phaser-game',
+            antialias: true,
+            mipmapFilter: 'LINEAR_MIPMAP_LINEAR',
+            scene: [Scene1, Scene2],
+            audio: {
+                disableWebAudio: false,
+            },
+        }
+
+        game = new Phaser.Game(gameConfig);
+        window.game = game
+    }
+    </script>
+  </body>
+</html>
